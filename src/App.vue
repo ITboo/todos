@@ -1,63 +1,57 @@
-<script lang="ts">
-type Todo = {
-  id: number;
-  title: string;
-  description: string;
-  checked: boolean;
-}
-const DEFAULT_TODO = {
-  title: '',
-  description: '',
+<script setup>
+import { ref, computed } from 'vue'
+
+let id = 0
+
+const newTodo = ref('')
+const hideCompleted = ref(false)
+const todos = ref([
+  { id: id++, text: 'Learn HTML', done: true },
+  { id: id++, text: 'Learn JavaScript', done: true },
+  { id: id++, text: 'Learn Vue', done: false }
+])
+
+const filteredTodos = computed(() => {
+  return hideCompleted.value
+    ? todos.value.filter((t) => !t.done)
+    : todos.value
+})
+
+function addTodo() {
+  todos.value.push({ id: id++, text: newTodo.value, done: false })
+  newTodo.value = ''
 }
 
-export default {
-  data() {
-    return {
-      todo: { ...DEFAULT_TODO },
-      todos: [
-        { id: 1, title: 'Watch video about Vue', description: 'blah-blah-blah', checked: false },
-        { id: 2, title: 'Create app', description: 'kinda funny', checked: false },
-        { id: 3, title: 'Update info', description: 'use google to get more data', checked: false }]
-    }
-  },
-  methods: {
-    addTodo(todo: Omit<Todo, 'id' | 'checked'>) {
-      this.todos.push({ id: this.todos.length + 1, checked: false, ...todo })
-    },
-    deleteTodo(id: number) {
-      this.todos = this.todos.filter((todo) => todo.id !== id);
-    },
-    onSubmit() {
-      this.addTodo(this.todo);
-      this.todo = { ...DEFAULT_TODO };
-    }
-  }
+function removeTodo(todo) {
+  todos.value = todos.value.filter((t) => t !== todo)
 }
 </script>
 
 <template>
-  <h1>ToDo app (Option API)</h1>
-  <form class="" @submit.prevent="onSubmit">
-    <input type="text" v-model="todo.title" placeholder="title">
-    <input type="text" v-model="todo.description" placeholder="description">
-    <button type="submit">Add</button>
-
+  <h1>ToDo app (Composition API)</h1>
+  <form @submit.prevent="addTodo">
+    <input v-model="newTodo" required placeholder="new todo">
+    <button>Add Todo</button>
   </form>
-
-  <ul v-for="todo in todos" :key="todo.id" v-if="todos.length" class="list">
-    <li class="list-item">
-      <div :class="{ checked: todo.checked }" class=" wrapper">
-        <input type="checkbox" v-model="todo.checked">
-        <div class="">
-          <h2>{{ todo.title }}</h2>
-          <p>{{ todo.description }}</p>
-        </div>
-      </div>
-      <span @click="deleteTodo(todo.id)">x</span>
+  <div>
+    <ul class="list">
+    <li v-for="todo in filteredTodos" :key="todo.id" class="list-item">
+      <input type="checkbox" v-model="todo.done">
+      <span :class="{ done: todo.done }">{{ todo.text }}</span>
+      <button @click="removeTodo(todo)">X</button>
     </li>
   </ul>
-  <h2 v-else>No todos there</h2>
+  <button @click="hideCompleted = !hideCompleted">
+    {{ hideCompleted ? 'Show all' : 'Hide completed' }}
+  </button>
+</div>
 </template>
+
+<style>
+.done {
+  text-decoration: line-through;
+}
+</style>
 
 <style scoped>
 .list {
